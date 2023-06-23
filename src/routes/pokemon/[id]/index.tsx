@@ -1,7 +1,7 @@
-import { component$, useContext } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
-import { PokemonGameContext } from '~/context';
+import { usePokemonGame } from '~/hooks/use-pokemon-game';
 
 export const usePokemonId = routeLoader$<number>(({ params, redirect }) => {
 	const id = Number(params.id);
@@ -15,13 +15,22 @@ export const usePokemonId = routeLoader$<number>(({ params, redirect }) => {
 
 export default component$(() => {
 	const pokemonId = usePokemonId();
-	const pokemonGame = useContext(PokemonGameContext);
+	const { reveal, showBackImage, toggleReveal, flipPokemon } = usePokemonGame();
 
 	return (
 		<>
 			<span>Pokemon: {pokemonId}</span>
 
-			<PokemonImage id={pokemonId.value} reveal={pokemonGame.reveal} backImage={pokemonGame.showBackImage} />
+			<PokemonImage id={pokemonId.value} reveal={reveal.value} backImage={showBackImage.value} />
+
+			<div class="mt-2">
+				<button onClick$={flipPokemon} class="btn btn-primary mr-2">
+					Flip
+				</button>
+				<button onClick$={toggleReveal} class="btn btn-primary mr-2">
+					Reveal
+				</button>
+			</div>
 		</>
 	);
 });

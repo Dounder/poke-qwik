@@ -1,43 +1,35 @@
-import { $, component$, useContext } from '@builder.io/qwik';
+import { $, component$ } from '@builder.io/qwik';
 import { useNavigate, type DocumentHead } from '@builder.io/qwik-city';
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
-import { PokemonGameContext } from '~/context';
+import { usePokemonGame } from '~/hooks/use-pokemon-game';
 
 export default component$(() => {
 	const nav = useNavigate();
+	const { pokemonId, reveal, showBackImage, previousPokemon, nextPokemon, flipPokemon, toggleReveal } = usePokemonGame();
 
-	const pokemonGame = useContext(PokemonGameContext);
-
-	const changePokemonId = $((value: number) => {
-		if (pokemonGame.pokemonId + value < 1) return;
-
-		pokemonGame.pokemonId += value;
-		pokemonGame.reveal = false;
-	});
-
-	const goToPokemon = $(() => nav(`/pokemon/${pokemonGame.pokemonId}/`));
+	const goToPokemon = $(() => nav(`/pokemon/${pokemonId.value}/`));
 
 	return (
 		<>
 			<span class="text-2xl">Simple finder</span>
 
-			<span class="text-9xl">{pokemonGame.pokemonId}</span>
+			<span class="text-9xl">{pokemonId.value}</span>
 
 			<div onClick$={() => goToPokemon()}>
-				<PokemonImage id={pokemonGame.pokemonId} backImage={pokemonGame.showBackImage} reveal={pokemonGame.reveal} />
+				<PokemonImage id={pokemonId.value} backImage={showBackImage.value} reveal={reveal.value} />
 			</div>
 
 			<div class="mt-2">
-				<button onClick$={() => changePokemonId(-1)} class="btn btn-primary mr-2">
+				<button onClick$={previousPokemon} class="btn btn-primary mr-2">
 					Previous
 				</button>
-				<button onClick$={() => (pokemonGame.showBackImage = !pokemonGame.showBackImage)} class="btn btn-primary mr-2">
+				<button onClick$={flipPokemon} class="btn btn-primary mr-2">
 					Flip
 				</button>
-				<button onClick$={() => (pokemonGame.reveal = !pokemonGame.reveal)} class="btn btn-primary mr-2">
+				<button onClick$={toggleReveal} class="btn btn-primary mr-2">
 					Reveal
 				</button>
-				<button onClick$={() => changePokemonId(1)} class="btn btn-primary">
+				<button onClick$={nextPokemon} class="btn btn-primary">
 					Next
 				</button>
 			</div>
