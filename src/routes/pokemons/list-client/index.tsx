@@ -1,29 +1,27 @@
-import { $, component$, useOnDocument, useStore, useTask$ } from '@builder.io/qwik';
+import { $, component$, useContext, useOnDocument, useTask$, useVisibleTask$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
+
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
-
+import { PokemonListContext } from '~/context';
 import { getSmallPokemons } from '~/helpers/get-pokemons';
-import type { SmallPokemon } from '~/interfaces';
-
-interface PokemonState {
-	page: number;
-	pokemons: SmallPokemon[];
-	isLoading: boolean;
-}
 
 export default component$(() => {
-	const pokemonState = useStore<PokemonState>({
-		pokemons: [],
-		page: 0,
-		isLoading: false,
-	});
+	const pokemonState = useContext(PokemonListContext);
 
 	useTask$(async ({ track }) => {
 		track(() => pokemonState.page);
 
-		const pokemons = await getSmallPokemons(pokemonState.page * 10, 30);
+		const pokemons = await getSmallPokemons(pokemonState.page * 30, 30);
+
+		// Prevent duplicates when scrolling fast
+		if (pokemons.some((pokemon) => pokemonState.pokemons.some((p) => p.id === pokemon.id))) return;
+
 		pokemonState.pokemons = [...pokemonState.pokemons, ...pokemons];
 		pokemonState.isLoading = false;
+	});
+
+	useVisibleTask$(() => {
+		window.scrollTo(0, pokemonState.pagePosition);
 	});
 
 	useOnDocument(
@@ -35,6 +33,7 @@ export default component$(() => {
 			if (currentScroll >= maxScroll && !pokemonState.isLoading) {
 				pokemonState.isLoading = true;
 				pokemonState.page++;
+				pokemonState.pagePosition = window.scrollY;
 			}
 		})
 	);
@@ -44,7 +43,6 @@ export default component$(() => {
 			<div class="flex flex-col space-y-3">
 				<span class="mt-5 text-5xl">Status</span>
 				<span>Current page: {pokemonState.page}</span>
-				<span>Browsing: {}</span>
 			</div>
 
 			<div class="grid sm:grid-cols-2 md:grid-cols-5 xl:grid-cols-7 mt-5">
@@ -54,6 +52,13 @@ export default component$(() => {
 						<span class="capitalize">{name}</span>
 					</div>
 				))}
+
+				{pokemonState.isLoading && (
+					<div class="py-10 m-5 flex flex-col justify-center items-center">
+						<div class="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+						<span class="capitalize">Loading...</span>
+					</div>
+				)}
 			</div>
 		</>
 	);

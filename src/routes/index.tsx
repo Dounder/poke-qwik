@@ -1,40 +1,40 @@
-import { $, component$, useSignal } from '@builder.io/qwik';
+import { $, component$, useContext } from '@builder.io/qwik';
 import { useNavigate, type DocumentHead } from '@builder.io/qwik-city';
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
+import { PokemonGameContext } from '~/context';
 
 export default component$(() => {
 	const nav = useNavigate();
-	const pokemonId = useSignal(1);
-	const showBackImage = useSignal(false);
-	const reveal = useSignal(false);
+
+	const pokemonGame = useContext(PokemonGameContext);
 
 	const changePokemonId = $((value: number) => {
-		if (pokemonId.value + value < 1) return;
+		if (pokemonGame.pokemonId + value < 1) return;
 
-		pokemonId.value += value;
-		reveal.value = false;
+		pokemonGame.pokemonId += value;
+		pokemonGame.reveal = false;
 	});
 
-	const goToPokemon = $(() => nav(`/pokemon/${pokemonId.value}/`));
+	const goToPokemon = $(() => nav(`/pokemon/${pokemonGame.pokemonId}/`));
 
 	return (
 		<>
 			<span class="text-2xl">Simple finder</span>
 
-			<span class="text-9xl">{pokemonId}</span>
+			<span class="text-9xl">{pokemonGame.pokemonId}</span>
 
 			<div onClick$={() => goToPokemon()}>
-				<PokemonImage id={pokemonId.value} backImage={showBackImage.value} reveal={reveal.value} />
+				<PokemonImage id={pokemonGame.pokemonId} backImage={pokemonGame.showBackImage} reveal={pokemonGame.reveal} />
 			</div>
 
 			<div class="mt-2">
 				<button onClick$={() => changePokemonId(-1)} class="btn btn-primary mr-2">
 					Previous
 				</button>
-				<button onClick$={() => (showBackImage.value = !showBackImage.value)} class="btn btn-primary mr-2">
+				<button onClick$={() => (pokemonGame.showBackImage = !pokemonGame.showBackImage)} class="btn btn-primary mr-2">
 					Flip
 				</button>
-				<button onClick$={() => (reveal.value = !reveal.value)} class="btn btn-primary mr-2">
+				<button onClick$={() => (pokemonGame.reveal = !pokemonGame.reveal)} class="btn btn-primary mr-2">
 					Reveal
 				</button>
 				<button onClick$={() => changePokemonId(1)} class="btn btn-primary">
