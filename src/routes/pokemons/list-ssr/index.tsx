@@ -1,6 +1,8 @@
-import { component$, useComputed$ } from '@builder.io/qwik';
+import { $, component$, useComputed$, useSignal, useStore } from '@builder.io/qwik';
 import { Link, routeLoader$, useLocation, type DocumentHead } from '@builder.io/qwik-city';
+
 import { PokemonImage } from '~/components/pokemons/pokemon-image';
+import { Modal } from '~/components/shared';
 import { getSmallPokemons } from '~/helpers/get-pokemons';
 import type { SmallPokemon } from '~/interfaces';
 
@@ -16,6 +18,14 @@ export const usePokemonList = routeLoader$<SmallPokemon[]>(async ({ query, redir
 export default component$(() => {
 	const pokemons = usePokemonList();
 	const location = useLocation();
+
+	const modalVisible = useSignal(false);
+	const modalPokemon = useStore({
+		id: '',
+		name: '',
+		description: '',
+	});
+
 	const offset = useComputed$<number>(() => {
 		const offset = Number(location.url.searchParams.get('offset') || '0');
 
@@ -23,6 +33,16 @@ export default component$(() => {
 		if (isNaN(offset)) return 0;
 
 		return offset;
+	});
+
+	const showModal = $(({ id, name }: SmallPokemon) => {
+		modalVisible.value = true;
+		modalPokemon.id = id;
+		modalPokemon.name = name;
+	});
+
+	const closeModal = $(() => {
+		modalVisible.value = false;
 	});
 
 	return (
@@ -44,12 +64,19 @@ export default component$(() => {
 
 			<div class="grid grid-cols-6 mt-5">
 				{pokemons.value.map(({ name, id }) => (
-					<div key={name} class="m-5 flex flex-col justify-center items-center">
+					<div key={name} onClick$={() => showModal({ id, name })} class="m-5 flex flex-col justify-center items-center">
 						<PokemonImage id={id} reveal />
 						<span class="capitalize">{name}</span>
 					</div>
 				))}
 			</div>
+
+			<Modal show={modalVisible.value} closeFn={closeModal} persistent>
+				<span q:slot="title">{modalPokemon.name}</span>
+				<div q:slot="content" class="flex flex-col justify-center items-center">
+					<PokemonImage id={modalPokemon.id} reveal />
+				</div>
+			</Modal>
 		</>
 	);
 });
